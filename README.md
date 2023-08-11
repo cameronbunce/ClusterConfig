@@ -44,10 +44,13 @@ Every time you access these computers over ssh you need to confirm who you are, 
 My computer where I'm making the SD cards is my daily driver, it's also running Linux, but this works on Mac too. I don't have a Windows computer to try this, but I'm sure it's not far off. 
 
 First, we make the keys
+
 `ssh-keygen`
+
 and press enter to use the default location and file name, to use no passphrase ( twice ) and you'll be rewarded with your own personal key and your key's randomart similar to mine here:
 
-```Generating public/private rsa key pair.
+```
+Generating public/private rsa key pair.
 Enter file in which to save the key (/home/cameron/.ssh/id_rsa): 
 Enter passphrase (empty for no passphrase): 
 Enter same passphrase again: 
@@ -72,7 +75,8 @@ The key's randomart image is:
 Two things to point out here from the path is my username on this compute is 'cameron' and I'm going to keep that on the scheduler and nodes, and the file it made is in /.ssh ( a hidden folder, because of the dot ) called 'id_rsa.pub'
 
 Have a look:
-```$ cat .ssh/id_rsa.pub 
+```
+$ cat .ssh/id_rsa.pub 
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDAxsfScpYP81VgwQIbmI22Co9AhSxBtzto81kjHJSEiQ1bgK/FjKuHvX59IYHKZjxCfZstxNIyX7XrOyr/Y3iJxuGPbJEdc8qiHjn5qwpD0CzPZyvrhERne8zABM25eGbUjVrtskLWiiULu47m7lfbB5m0fxgYy2lCY+3KhhAvCSzVjSo08KHR/E5EF+jkzUASBxDRNs/NJUFPvYt+F03vpWZxB0cddjSFncXNiUZAapSaB5rPBguYDyA6HNk8tBp+j9KDYPO5FsFmHErHXUZybGgsTIYDGEGE2gtdpGAizg5xbcBM6IyuK6GNls2mFVrPNdMAvXKzyro6uMKS0XQjm4b+YCYivDEJJCmMrJBZI3SGGDGNss94thNCy5jSmKShbtQyPE4gb56BAEsgp37rkzECDbAQbRDVBReHbfK9iYmZNCDKPxFEzaU6U+ylv1sZtZU15RZRxhPs6EmJmd5uRYTfUZfC1c4zodjfjaauPQkGes4uZ82xdfpiEzpKPos= cameron@rp4n2
 ```
 it looks like:
@@ -99,19 +103,23 @@ If one doesn't resolve and log in, now you can check your DHCP leases.
 Let them all run updates while you scrounge around for a flash drive that doesn't have pictures your kid took or backups of stuff you aren't sure is safe to delete yet. 
 
 *All machines*
+
 `sudo apt update && sudo apt upgrade -y`
 
 When that finishes, install ntpdate, and reboot
 
 *All machines*
+
 `sudo apt install ntpdate -y`
+
 `sudo reboot now`
 
 # Storage
 
 Plug in the flash drive to your scheduler node and find it's ssh tab, and list the block devices. Actually, any of you who are the "read the instructions completely before beginning assembly" type will have won this round, because really you should `lsblk` before you plug in the flash drive, and after and compare to see what your drive's device is actually called. 
 
-```$ lsblk
+```
+$ lsblk
 NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 loop0         7:0    0  67.6M  1 loop /snap/core22/611
 loop1         7:1    0  68.5M  1 loop /snap/core22/861
@@ -136,11 +144,12 @@ mmcblk0     179:0    0  29.8G  0 disk
 
 ```
 
-Gotcha "/dev/sda" is the base device with a partition on it called "sda1" yours may be called something else depending on your devices.
+Gotcha! "/dev/sda" is the base device with a partition on it called "sda1" yours may be called something else depending on your devices.
 
 Format the flash drive. Here there be dragons, measure twice, cut once.
 
-```cameron@rp4n0:~$ sudo mkfs.ext4 /dev/sda1
+```
+cameron@rp4n0:~$ sudo mkfs.ext4 /dev/sda1
 mke2fs 1.47.0 (5-Feb-2023)
 /dev/sda1 contains a vfat file system
 Proceed anyway? (y,N) y
@@ -158,13 +167,15 @@ Writing superblocks and filesystem accounting information: done
 
 Now we somewhere to mount our new partition, I already showed that I have it mounted at /clusterfs, so let's make that
 
-```sudo mkdir /clusterfs
+```
+sudo mkdir /clusterfs
 sudo chown cameron:root -R /clusterfs
 sudo chmod 777 -R /clusterfs```
 
 We need to find our partiton's UUID
 
-```$ blkid
+```
+$ blkid
 /dev/mmcblk0p1: LABEL_FATBOOT="system-boot" LABEL="system-boot" UUID="C6C5-E1FB" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="5036de4e-01"
 /dev/mmcblk0p2: LABEL="writable" UUID="25a83575-fd50-4dcc-85e0-e3a81c621aa2" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="5036de4e-02"
 /dev/sda1: UUID="7dac6cba-8763-4a12-abba-146f1a410b1b" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="561c8807-01"
@@ -178,13 +189,15 @@ we'll take that PARTUUID ( yours will be different ) and add it to our file syst
 
 Edit /etc/fstab as root, and make it look like this:
 
-```$ sudo nano /etc/fstab
+```
+$ sudo nano /etc/fstab
 LABEL=writable	/	ext4	discard,commit=30,errors=remount-ro	0 1
 LABEL=system-boot       /boot/firmware  vfat    defaults        0       1
 PARTUUID="561c8807-01" /clusterfs ext4 defaults 0 2
 ```
 
 That line is in the following format:
+
 `<device> <mount point> <file system type> <Options> <dump> <Pass number>`
 
 For more information on /etc/fstab, see https://help.ubuntu.com/community/Fstab
@@ -195,7 +208,8 @@ Invoke that new mount point we wrote to /etc/fstab with
 
 You'll likely get a warning about reloading the daemon that reads the fstab, just do what it says:
 
-```cameron@rp4n0:~$ sudo mount -a
+```
+cameron@rp4n0:~$ sudo mount -a
 mount: (hint) your fstab has been modified, but systemd still uses
        the old version; use 'systemctl daemon-reload' to reload.
 cameron@rp4n0:~$ sudo systemctl daemon-reload
@@ -212,7 +226,8 @@ and create the entry to tell NFS what to share and to whom.
 
 But first you'll need to check our network scheme, 
 
-```cameron@rp4n0:~$ ip a
+```
+cameron@rp4n0:~$ ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
@@ -256,7 +271,8 @@ To connect each node to the file share we've just created, install NFS:
 
 Create a folder for our mount point:
 
-```cameron@rp4n1:~$ sudo mkdir /clusterfs
+```
+cameron@rp4n1:~$ sudo mkdir /clusterfs
 cameron@rp4n1:~$ sudo chown cameron:root /clusterfs
 cameron@rp4n1:~$ sudo chmod -R 777 /clusterfs
 ```
@@ -271,11 +287,12 @@ Your IP will vary, but that's my scheduler's IP, the entry is the same on all th
 
 Reload daemons to pull the new /etc/fstab and mount:
 
-```cameron@rp4n1:~$ sudo systemctl daemon-reload
+```
+cameron@rp4n1:~$ sudo systemctl daemon-reload
 cameron@rp4n1:~$ sudo mount -a
 ```
 
-# SLURM 
+# SLURM - Scheduler configuration
 
 On the scheduler we'll want to edit our hosts file to simplify how we refer to our worker computers. Adding them as staticly mapped hostnames takes a load off our typing and makes it easier to remember [ rp4n1, vs 192.168.1.47 or rp4n1.local ] and takes a load off the DNS lookup [ for the .local names ].
 
@@ -284,23 +301,27 @@ As we did above, we can find the network address of the nodes using
 *on each worker node*
 `ip a`
 
-We then add them to the bottom of the /etc/hosts file
+We then add them to the bottom of the /etc/hosts file template ( if you open /etc/hosts, you'll see a message about the template), we'll include our scheduler's IP and hostname for reasons we'll get to below.
 
 *on the scheduler*
-`sudo nano /etc/hosts`
+
+`cameron@rp4n0:~$ sudo nano /etc/cloud/templates/hosts.debian.tmpl`
 
 adding:
 
-```192.168.1.47 rp4n1
+```
+192.168.1.49 rp4n0
+192.168.1.47 rp4n1
 192.168.1.48 rp4n2```
 
 Install Slurm Workload Manager on the scheduler
 
-`sudo apt install slurm-wlm`
+`cameron@rp4n0:~$ sudo apt install slurm-wlm`
 
 Slurm is packaged with good example configurations, so let's start with the simple version. We'll copy it from the docs and into our /etc/slurm directory, and extract it with gzip ( permission denied message is because I forgot to run the gzip command as superuser, even though I asked it to write to /etc/<anything> and the sudo !! command just says, "yea I meant 'sudo whaterverIsaidjustthen' and it answers with the command you meant and runs it ). Don't forget sudo. 
 
-```cameron@rp4n0:~$ cd /etc/slurm/        
+```
+cameron@rp4n0:~$ cd /etc/slurm/        
 cameron@rp4n0:/etc/slurm$ sudo cp /usr/share/doc/slurm-client/examples/slurm.conf.simple.gz .
 cameron@rp4n0:/etc/slurm$ gzip -d slurm.conf.simple.gz 
 gzip: slurm.conf.simple: Permission denied
@@ -309,3 +330,207 @@ sudo gzip -d slurm.conf.simple.gz
 cameron@rp4n0:/etc/slurm$ mv slurm.conf.simple slurm.conf
 ```
 
+Now let's edit the config file, 
+
+`sudo nano slurm.conf`
+
+and we have a lot to look at here. This big file will be copied to each of the workers as well, and we'll keep it the same across the whole cluster, in fact, this file being the same is how we know that we're working on the same cluster or not. I'll just pick out the lines we change and the lines we check on:
+
+Set the cluster name:
+
+`ClusterName=MyCluster`
+
+Our Scheduler runs the daemon slurmctld, so we need that to be set here, telling the worker nodes where to check for jobs. Enter the hostname and IP:
+
+`SlurmctldHost=rp4n0(192.168.1.49)`
+
+Below are the settings I didn't change, just for reference as we scroll through. I added `DebugFlags=NO_CONF_HASH` in the debug section just to help small differences in the debug file not break things on principle while we're working on getting it set up. I considered changing `ReturnToService` to `1` but haven't yet. 
+
+```
+ProctrackType=proctrack/linuxproc
+ReturnToService=2
+SlurmctldPidFile=/run/slurmctld.pid
+SlurmdPidFile=/run/slurmd.pid
+SlurmdSpoolDir=/var/lib/slurm/slurmd
+StateSaveLocation=/var/lib/slurm/slurmctld
+SlurmUser=slurm
+TaskPlugin=task/none
+SchedulerType=sched/backfill
+SelectType=select/cons_tres
+SelectTypeParameters=CR_Core_Memory
+AccountingStorageType=accounting_storage/none
+JobCompType=jobcomp/none
+JobAcctGatherType=jobacct_gather/none
+SlurmctldDebug=info
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=info
+SlurmdLogFile=/var/log/slurm/slurmd.log
+```
+
+Now we fill in our node information after the pattern given. At first I tried using `RealMemory=8000` but that didn't work because slurm doesn't see 8000 MB of ram on the system. We can try that later.
+
+```
+#NodeName=server CPUs=16 RealMemory=64000
+NodeName=rp4n1 NodeAddr=192.168.1.47 CPUs=4 State=UNKNOWN
+NodeName=rp4n2 NodeAddr=192.168.1.48 CPUs=4 State=UNKNOWN
+```
+
+Now we set our Partition information
+
+`PartitionName=rp4 Nodes=ALL Default=YES MaxTime=INFINITE State=UP`
+
+
+# Cgroup configuration
+
+My instructions here will deviate from the article and videos I have referred to so far, as I got some deprecation warnings and had to make changes.
+We'll create '/etc/slurm/cgroup.conf'
+
+`cameron@rp4n0:~$ sudo nano /etc/slurm/cgroup.conf`
+
+and fill it with:
+```
+CgroupMountpoint="/sys/fs/cgroup"
+CgroupAutomount=yes
+ConstrainCores=no
+ConstrainRAMSpace=yes
+ConstrainSwapSpace=no
+ConstrainDevices=no
+AllowedRamSpace=100
+AllowedSwapSpace=0
+MaxRAMPercent=100
+MaxSwapPercent=100
+MinRAMSpace=30
+```
+
+# SSH Keys
+
+We need to create a key pair for our scheduler. We won't interact with this directly much but it is needed for testing and diagnostic connections from the scheduler to the nodes, They are configured to only allow ssh connections with keys, and currently only know the keys from our workstation, repeat this process from any computer from which you'd like to access the cluster. 'ssh-keygen will prompt for input, just press enter for the defaults.
+
+```
+cameron@rp4n0:~$ ssh-keygen
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/cameron/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/cameron/.ssh/id_rsa
+Your public key has been saved in /home/cameron/.ssh/id_rsa.pub
+The key fingerprint is:
+SHA256:k69cH+dKLp/wQ/2S3mFCZrdeAGmSONYBqApe8mb26XY cameron@rp4n0
+The key's randomart image is:
++---[RSA 3072]----+
+|       ....      |
+|      .  o o .   |
+|     .  + + +    |
+|.. ..  . o o .   |
+|..+.    S    =.. |
+| ..=     o  = o..|
+|  + . .   +.o..*.|
+|     + E o.*.=*.+|
+|    o.. o  oB+oo.|
++----[SHA256]-----+
+```
+
+# Distribute configs 
+
+Since we will use these files across the whole cluster, lets make a place to keep them:
+
+`cameron@rp4n0:~$ sudo mkdir /clusterfs/configs `
+
+Now we copy the configuration files to our shared directory.
+
+```
+cameron@rp4n0:~$ sudo cp /etc/slurm/slurm.conf /clusterfs/configs/
+cameron@rp4n0:~$ sudo cp /etc/slurm/cgroup.conf /clusterfs/configs/
+cameron@rp4n0:~$ sudo cp /etc/munge/munge.key /clusterfs/configs/
+cameron@rp4n0:~$ sudo cp /etc/cloud/templates/hosts.debian.tmpl /clusterfs/configs/
+cameron@rp4n0:~$ sudo cp .ssh/id_rsa.pub /clusterfs/configs/
+
+```
+
+# Start Daemons - Scheduler
+
+In Linux, systemdtl tracks and starts the computer's core services. If we want a service to be part of what a computer does all the time, we register the daemon with systemctl. We have installed slurm, which has provided stubs for systemctl to import, but they are not active yet. When we tell systemctl to 'enable' a service daemon, it will start that service on boot using the details specified in a service configuration file. I say that to say that these commands are not magic, but patternistic, and we're standing on the shoulders of giants here to do good things. Namely, we're going to enable the services to run at system boot and we're going to manually start them. To read more about how systemctl works, see - https://www.redhat.com/sysadmin/getting-started-systemctl and https://www.digitalocean.com/community/tutorials/how-to-use-systemctl-to-manage-systemd-services-and-units
+
+Enable and start [ munge, slurmd, slurmctld] and then reboot if you want to:
+```
+cameron@rp4n0:/etc/slurm$ sudo systemctl enable munge
+Synchronizing state of munge.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable munge
+cameron@rp4n0:/etc/slurm$ sudo systemctl start munge
+cameron@rp4n0:/etc/slurm$ sudo systemctl enable slurmd
+Synchronizing state of slurmd.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable slurmd
+cameron@rp4n0:/etc/slurm$ sudo systemctl start slurmd
+cameron@rp4n0:/etc/slurm$ sudo systemctl enable slurmctld
+Synchronizing state of slurmctld.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable slurmctld
+cameron@rp4n0:/etc/slurm$ sudo systemctl start slurmctld
+cameron@rp4n0:/etc/slurm$ sudo reboot now
+
+```
+
+
+# Slurm - Worker configuration
+
+This section will be similar, but faster because we're going to make the workers follow the pattern we established above. We'll need a host file template on each worker. Because we populated the whole cluster's information in the scheduler's host file template, we can use it across the whole cluster ( we can add the line for the hosts' own non-loopback address because it matches on the first entry only). More information about this functionality is here - https://access.redhat.com/solutions/81123
+
+```
+cameron@rp4n1:~$ sudo cp /clusterfs/configs/hosts.debian.tmpl /etc/cloud/templates/hosts.debian.tmpl 
+cameron@rp4n1:~$ sudo cp /clusterfs/configs/munge.key /etc/munge/munge.key
+cameron@rp4n1:~$ sudo cp /clusterfs/configs/slurm.conf /etc/slurm/slurm.conf
+cameron@rp4n1:~$ sudo cp /clusterfs/configs/cgroup.conf /etc/slurm/cgroup.conf
+cameron@rp4n1:~$ sudo cat /clusterfs/configs/id_rsa.pub >> .ssh/authorized_keys 
+```
+
+```
+cameron@rp4n2:~$ sudo cp /clusterfs/configs/hosts.debian.tmpl /etc/cloud/templates/
+cameron@rp4n2:~$ sudo cp /clusterfs/configs/slurm.conf /etc/slurm/
+cameron@rp4n2:~$ sudo cp /clusterfs/configs/cgroup.conf /etc/slurm/
+cameron@rp4n2:~$ sudo cp /clusterfs/configs/munge.key /etc/munge/
+cameron@rp4n2:~$ sudo cat /clusterfs/configs/id_rsa.pub >> .ssh/authorized_keys 
+```
+
+both of the above sections do the same thing, one showing how to specify the target file name, one simply specifying the target folder. 
+
+# Start daemons - Workers
+
+Enable and start munge and slurmd on all workers
+
+```
+cameron@rp4n1:~$ sudo systemctl enable munge
+Synchronizing state of munge.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable munge
+cameron@rp4n1:~$ sudo systemctl start munge
+cameron@rp4n1:~$ sudo systemctl enable slurmd
+Synchronizing state of slurmd.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install enable slurmd
+cameron@rp4n1:~$ sudo systemctl start slurmd
+```
+
+# Test services
+
+Test Munge from the scheduler to a worker
+
+```
+cameron@rp4n0:~$ ssh rp4n1 munge -n | unmunge
+STATUS:          Success (0)
+ENCODE_HOST:     rp4n0 (127.0.1.1)
+ENCODE_TIME:     2023-08-11 11:02:40 -0400 (1691766160)
+DECODE_TIME:     2023-08-11 11:02:40 -0400 (1691766160)
+TTL:             300
+CIPHER:          aes128 (4)
+MAC:             sha256 (5)
+ZIP:             none (0)
+UID:             cameron (1000)
+GID:             cameron (1003)
+LENGTH:          0
+
+```
+
+Test slurm from the scheduler:
+
+```
+cameron@rp4n0:~$ srun --nodes=2 hostname
+rp4n2
+rp4n1
+```
