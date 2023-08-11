@@ -312,7 +312,8 @@ adding:
 ```
 192.168.1.49 rp4n0
 192.168.1.47 rp4n1
-192.168.1.48 rp4n2```
+192.168.1.48 rp4n2
+```
 
 Install Slurm Workload Manager on the scheduler
 
