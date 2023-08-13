@@ -114,6 +114,106 @@ When that finishes, install ntpdate, and reboot
 
 `sudo reboot now`
 
+# Ethernet Config
+If like me you've set wireless information in your imager profile, you may need to also turn up the ethernet interface. This is a good time to set static IPs of where you'd like your wired connections to live in your network, or DHCP reservations if that's your flavor. We need some information either way to configure netplan.
+
+`cameron@rp4n1:~$ sudo lshw -class network`
+ 
+ answers with:
+
+ ```
+ cameron@rp4n1:~$ sudo lshw -class network
+  *-interface:0             
+       description: Wireless interface
+       product: 43430
+       vendor: Broadcom
+       physical id: 1
+       bus info: mmc@1:0001:1
+       logical name: mmc1:0001:1
+       logical name: wlan0
+       serial: dc:a6:32:d5:c4:d6
+       capabilities: ethernet physical wireless
+       configuration: broadcast=yes driver=brcmfmac driverversion=7.45.241 firmware=01-703fd60 ip=192.168.1.47 multicast=yes wireless=IEEE 802.11
+  *-network
+       description: Ethernet interface
+       physical id: 5
+       logical name: eth0
+       serial: dc:a6:32:d5:c4:d5
+       size: 1Gbit/s
+       capacity: 1Gbit/s
+       capabilities: ethernet physical tp mii 10bt 10bt-fd 100bt 100bt-fd 1000bt 1000bt-fd autonegotiation
+       configuration: autonegotiation=on broadcast=yes driver=bcmgenet driverversion=6.2.0-1010-raspi duplex=full link=yes multicast=yes port=twisted pair speed=1Gbit/s
+```
+
+so I can see here that our interface is named simply enough 'eth0' on the Raspberry Pi. If you're on more complex hardware it could have a name that looks more like 'enp0s25' but what you're looking for is the 'description: Ethernet interface' part, and the logical name under that. We also see here the MAC - serial- for reservations.  
+
+I took my MACs and made reservations, since DHCP owns my whole network space. I'll show static further down. For my netplan configuration, I edited '/etc/netplan/50-cloud-init.yaml' and added the second entry:
+```
+cameron@rp4n1:~$ sudo nano /etc/netplan/50-cloud-init.yaml
+# This file is generated from information provided by the datasource.  Changes
+# to it will not persist across an instance reboot.  To disable cloud-init's
+# network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {config: disabled}
+network:
+    version: 2
+    wifis:
+        renderer: networkd
+        wlan0:
+            access-points:
+                SixTwentyFour:
+                    password: bf673221d3a5a52609ac319422ab61dad2589d28befe97db48d994f1082aefd3
+            dhcp4: true
+            optional: true
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      dhcp4: true
+```
+
+I add that second 'network' entry the same way for all of my nodes, scheduler too, If I was fancy, I could add some script to concatenate that file, but I'm not that fancy. Now we just need to apply the settings and we should see a new IP and the interface showing UP.
+
+```
+cameron@rp4n1:~$ sudo nano /etc/netplan/50-cloud-init.yaml 
+cameron@rp4n1:~$ sudo netplan apply
+Cannot call openvswitch: ovsdb-server.service is not running.
+cameron@rp4n1:~$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+    link/ether dc:a6:32:d5:c4:d5 brd ff:ff:ff:ff:ff:ff
+    altname end0
+    inet 192.168.1.151/24 metric 100 brd 192.168.1.255 scope global dynamic eth0
+       valid_lft 86385sec preferred_lft 86385sec
+    inet6 fe80::dea6:32ff:fed5:c4d5/64 scope link 
+       valid_lft forever preferred_lft forever
+3: wlan0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether dc:a6:32:d5:c4:d6 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.1.47/24 metric 600 brd 192.168.1.255 scope global dynamic wlan0
+       valid_lft 86393sec preferred_lft 86393sec
+    inet6 fe80::dea6:32ff:fed5:c4d6/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+
+Good. If you want a static IP, you can enter the following in your netplan configuration instead, replacing the address with something fitting for your network:
+
+```
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0:
+      addresses:
+        - 10.10.10.2/24
+```
+More informtion on netplan is available at - https://ubuntu.com/server/docs/network-configuration
+
 # Storage
 
 Plug in the flash drive to your scheduler node and find it's ssh tab, and list the block devices. Actually, any of you who are the "read the instructions completely before beginning assembly" type will have won this round, because really you should `lsblk` before you plug in the flash drive, and after and compare to see what your drive's device is actually called. 
@@ -474,6 +574,10 @@ cameron@rp4n0:/etc/slurm$ sudo reboot now
 # Slurm - Worker configuration
 
 This section will be similar, but faster because we're going to make the workers follow the pattern we established above. We'll need a host file template on each worker. Because we populated the whole cluster's information in the scheduler's host file template, we can use it across the whole cluster ( we can add the line for the hosts' own non-loopback address because it matches on the first entry only). More information about this functionality is here - https://access.redhat.com/solutions/81123
+
+First install slurm
+
+`sudo apt install slurmd slurm-client -y`
 
 ```
 cameron@rp4n1:~$ sudo cp /clusterfs/configs/hosts.debian.tmpl /etc/cloud/templates/hosts.debian.tmpl 
