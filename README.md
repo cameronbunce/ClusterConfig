@@ -28,7 +28,7 @@ then rp4n1 and rp4n2 will also mount 'rp4n0:/clusterfs' to their own '/clusterfs
 
 Gone are the days of setting up a Raspberry Pi the hard way. Imager is the only way to fly, get it as 'rpi-imager' in apt, or https://www.raspberrypi.com/software/
 
-Now, we're going to use the 64-bit Ubuntu Server 23.04, but Imager is going to do the dirty work for us, so open it up.
+Now, we're going to use the 64-bit Ubuntu Server 23.04, but Imager is going to do the dirty work for us, so open it up. If you're going to use your workstation as a scheduler, be sure to use the same release on all machines as apt packages different and incompatible versions of slurm for each Ubuntu release. Ask me how I know.
 Click 'Choose OS' then 'Other General-purpose OS' then 'Ubuntu' and finally "Ubuntu Server 23.04 (64-bit)"
 
 BUT, we're gonna click on the gear
@@ -145,7 +145,7 @@ If like me you've set wireless information in your imager profile, you may need 
        configuration: autonegotiation=on broadcast=yes driver=bcmgenet driverversion=6.2.0-1010-raspi duplex=full link=yes multicast=yes port=twisted pair speed=1Gbit/s
 ```
 
-so I can see here that our interface is named simply enough 'eth0' on the Raspberry Pi. If you're on more complex hardware it could have a name that looks more like 'enp0s25' but what you're looking for is the 'description: Ethernet interface' part, and the logical name under that. We also see here the MAC - serial- for reservations.  
+so I can see here that our interface is named simply enough 'eth0' on the Raspberry Pi 4. If you're on more complex hardware it could have a name that looks more like 'enp0s25' but what you're looking for is the 'description: Ethernet interface' part, and the logical name under that. We also see here the MAC - serial- for reservations.  
 
 I took my MACs and made reservations, since DHCP owns my whole network space. I'll show static further down. For my netplan configuration, I edited '/etc/netplan/50-cloud-init.yaml' and added the second entry:
 ```
