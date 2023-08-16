@@ -1,13 +1,37 @@
+# Running Llama.cpp on the cluster we have made
+
+I'm not paving any particularly new ground here, just recording my path, standing on the shoulders of giants - thanks to https://github.com/ggerganov and https://github.com/theycallmeloki for paving the way.
+
+
+```
 cd /clusterfs
 mkdir Projects
 cd Projects/
 git clone https://github.com/ggerganov/llama.cpp
+```
 
+Since writing all the README steps, I've enlisted a RPi 3B+ as a scheduler node to free up one of my Pi4s for compute. There's one more entry in the hostfile, one more node in the slurm.conf, but otherwise it's the same. I still have one node on wifi still. 
+
+This is to build the llama.cpp main executable with MPI enabled, dependencies for this are satisfied with the instructions in Part 3 of Garret Mills' instructions (https://glmdev.medium.com/building-a-raspberry-pi-cluster-f5f2446702e8):
+
+`srun --nodes=3 apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev -y`
+
+```
 cameron@rp4n1:~$ cd /clusterfs/Projects/llama.cpp/
 cameron@rp4n1:/clusterfs/Projects/llama.cpp$ make CC=mpicc CXX=mpicxx LLAMA_MPI=1
+```
+
+I'm not redistributing these files, just tracking back for reproducibility, the model files I used were from TheBloke
+13b https://huggingface.co/TheBloke/LLaMa-13B-GGML 
+65B - https://huggingface.co/TheBloke/llama-65B-GGML
+
+the q4_0 version of each
 
 # 13B
 
+SLurm job :
+
+```
 #!/bin/bash
 #SBATCH --nodes=3
 #SBATCH --ntasks-per-node=4
@@ -17,8 +41,11 @@ cd $SLURM_SUBMIT_DIR
 echo "Master node: $(hostname)"
 
 mpirun -hostfile /clusterfs/Projects/llama.cpp/hostfile -n 3 /clusterfs/Projects/llama.cpp/main -m /home/cameron/models/llama-13b.ggmlv3.q4_0.bin -p "Raspberry Pi computers are " -n 128
+```
 
+slurm output:
 
+```
 cat slurm-21.out 
 Master node: rp4n0
 main: build = 975 (9ca4abe)
@@ -104,10 +131,13 @@ llama_print_timings:      sample time =   264.42 ms /   128 runs   (    2.07 ms 
 llama_print_timings: prompt eval time = 10146.71 ms /     8 tokens ( 1268.34 ms per token,     0.79 tokens per second)
 llama_print_timings:        eval time = 287157.12 ms /   127 runs   ( 2261.08 ms per token,     0.44 tokens per second)
 llama_print_timings:       total time = 297598.22 ms
-
+```
 
 # 65B
 
+Slurm job:
+
+```
 sub_65b.sh 
 #!/bin/bash
 #SBATCH --nodes=3
@@ -118,8 +148,11 @@ cd $SLURM_SUBMIT_DIR
 echo "Master node: $(hostname)"
 
 mpirun -hostfile /clusterfs/Projects/llama.cpp/hostfile -n 3 /clusterfs/Projects/llama.cpp/main -m /home/cameron/models/llama-65b.ggmlv3.q4_0.bin -p "Why do we have to sleep?" -n 128
+```
 
+running and output ( 16 Aug 10:20 ):
 
+```
 cameron@rp3n0:/clusterfs/Projects$ sinfo
 PARTITION AVAIL  TIMELIMIT  NODES  STATE NODELIST
 rp4*         up   infinite      3  alloc rp4n[0-2]
@@ -200,4 +233,20 @@ llama_new_context_with_model: kv self size  = 1280.00 MB
 llama_new_context_with_model: compute buffer total size =  119.35 MB
 llama_new_context_with_model: kv self size  = 1280.00 MB
 llama_new_context_with_model: compute buffer total size =  119.35 MB
- Why do we have to sleep? That’s something that researchers are still trying to figure out. What they do know
+ Why do we have to sleep? That’s something that researchers are still trying to figure out. What they do know, however, is how a lack of quality sleep can affect your health and well-being. This includes more than just feeling tired the next day!
+Without enough sleep, you may be at greater risk for heart disease and type 2 diabetes, as well as obesity. And while most people associate being drowsy with safety concerns such as driving while fatigued (see below), a new study has found that sleep deprivation may even put nurses’ patients in jeopardy!
+The
+llama_print_timings:        load time = 1446192.69 ms
+llama_print_timings:      sample time =   281.36 ms /   128 runs   (    2.20 ms per token,   454.93 tokens per second)
+llama_print_timings: prompt eval time = 592147.39 ms /     8 tokens (74018.42 ms per token,     0.01 tokens per second)
+llama_print_timings:        eval time = 74540213.30 ms /   127 runs   (586930.81 ms per token,     0.00 tokens per second)
+llama_print_timings:       total time = 75132679.76 ms
+
+```
+
+To Do:
+- Move all nodes to 1Gbit network
+- Add Jetson Nano and VIM3 nodes, requires some version mindfulness:
+- - Jetson Nano base OS images are still on 18.04
+- - VIM3 images are on 20.04
+- - - I could build from source on both, or rebase the Pis to 20.04 and only build the Nano from source, but I'd rather keep it uniform. ( scheduler has to be on the same version, so I can't run the weirdies as a partition unto themselves controlled by the same controller as the others, I tried )
