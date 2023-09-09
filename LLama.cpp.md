@@ -247,6 +247,6 @@ llama_print_timings:       total time = 75132679.76 ms
 To Do:
 - Move all nodes to 1Gbit network
 - Add Jetson Nano and VIM3 nodes, requires some version mindfulness:
-- - Jetson Nano base OS images are still on 18.04
+- - Jetson Nano base OS images are still on 18.04, but https://github.com/Qengineering/Jetson-Nano-Ubuntu-20-image 
 - - VIM3 images are on 20.04
 - - - I could build from source on both, or rebase the Pis to 20.04 and only build the Nano from source, but I'd rather keep it uniform. ( scheduler has to be on the same version, so I can't run the weirdies as a partition unto themselves controlled by the same controller as the others, I tried )
