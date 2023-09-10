@@ -365,7 +365,7 @@ HPL_pdgesv() end time   Fri Sep  8 18:35:26 2023
 ||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   4.16418112e-03 ...... PASSED
 ```
 
-That was because I hadn't updated teh HPL.dat to reflect running on multiple nodes. Once I had that updated, I got much better results. Using this site for guidance - https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/ - I now ran it again with the following configuration.
+That was because I hadn't updated the HPL.dat to reflect running on multiple nodes. Once I had that updated, I got much better results. Using this site for guidance - https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/ - I now ran it again with the following configuration.
 
 ```
 HPLinpack benchmark input file
@@ -572,3 +572,192 @@ HPL_pdgesv() end time   Sat Sep  9 10:37:10 2023
 
 
 ```
+
+
+recompiling with BLIS just as referenced in https://github.com/jfikar/xhpl-aarch64 :
+
+```
+wget https://github.com/flame/blis/archive/refs/tags/0.9.0.tar.gz
+tar xvf 0.9.0.tar.gz
+cd blis-0.9.0
+./configure -p ${HOME}/blis --disable-shared -t openmp auto
+make -j${nproc}
+make check
+make install
+ln -s ${HOME}/blis/lib/libblis.a ${HOME}/blis/lib/libopenblas.a
+LDFLAGS=-L${HOME}/blis/lib CFLAGS="-pthread -fopenmp" ./configure
+make -j$(nproc)
+```
+
+gave some improvement before I killed it:
+
+```
+cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat slurm-95.out 
+Master node: rp4n0
+
+HPLinpack benchmark input file
+Innovative Computing Laboratory, University of Tennessee
+HPL.out     output file name (if any)
+6           device out (6=stdout,7=stderr,file)
+1           # of problems sizes (N)
+48768       Ns
+20          # of NBs
+96 104 112 120 128 136 144 152 160 168 176 184 192 200 208 216 224 232 240 248 NBs
+0           PMAP process mapping (0=Row-,1=Column-major)
+1           # of process grids (P x Q)
+3           Ps
+4           Qs
+16.0        threshold
+1           # of panel fact
+2           PFACTs (0=left, 1=Crout, 2=Right)
+1           # of recursive stopping criterium
+4           NBMINs (>= 1)
+1           # of panels in recursion
+2           NDIVs
+1           # of recursive panel fact.
+1           RFACTs (0=left, 1=Crout, 2=Right)
+1           # of broadcast
+1           BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM)
+1           # of lookahead depth
+1           DEPTHs (>=0)
+2           SWAP (0=bin-exch,1=long,2=mix)
+64           swapping threshold
+0           L1 in (0=transposed,1=no-transposed) form
+0           U  in (0=transposed,1=no-transposed) form
+1           Equilibration (0=no,1=yes)
+8           memory alignment in double (> 0)
+
+
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :   48768 
+NB     :      96      104      112      120      128      136      144      152 
+             160      168      176      184      192      200      208      216 
+             224      232      240      248 
+PMAP   : Row-major process mapping
+P      :       3 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :  1ringM 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768    96     3     4            3049.57             2.5357e+01
+HPL_pdgesv() start time Sat Sep  9 13:09:24 2023
+
+HPL_pdgesv() end time   Sat Sep  9 14:00:14 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.42358129e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768   104     3     4            3083.98             2.5074e+01
+HPL_pdgesv() start time Sat Sep  9 14:03:01 2023
+
+HPL_pdgesv() end time   Sat Sep  9 14:54:25 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.38448949e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768   112     3     4            3120.17             2.4783e+01
+HPL_pdgesv() start time Sat Sep  9 14:57:12 2023
+
+HPL_pdgesv() end time   Sat Sep  9 15:49:12 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.11958763e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768   120     3     4            3069.91             2.5189e+01
+HPL_pdgesv() start time Sat Sep  9 15:51:58 2023
+
+HPL_pdgesv() end time   Sat Sep  9 16:43:08 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.27153433e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768   128     3     4            3069.63             2.5191e+01
+HPL_pdgesv() start time Sat Sep  9 16:45:54 2023
+
+HPL_pdgesv() end time   Sat Sep  9 17:37:03 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   2.96044964e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       48768   136     3     4            3054.20             2.5318e+01
+HPL_pdgesv() start time Sat Sep  9 17:39:48 2023
+
+HPL_pdgesv() end time   Sat Sep  9 18:30:42 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.22980846e-03 ...... PASSED
+mpirun: Forwarding signal 18 to job
+slurmstepd-rp4n0: error: *** JOB 95 ON rp4n0 CANCELLED AT 2023-09-09T19:14:22 ***
+[rp4n0:57763] oob:tcp: send_msg: write failed: Broken pipe (32) [sd = 23]
+[rp4n0:57763] [[4225,0],0]-[[4225,0],2] mca_oob_tcp_peer_send_handler: unable to send message ON SOCKET 23
+[rp4n0:57763] oob:tcp: send_msg: write failed: Broken pipe (32) [sd = 22]
+[rp4n0:57763] [[4225,0],0]-[[4225,0],1] mca_oob_tcp_peer_send_handler: unable to send message ON SOCKET 22
+
+```
+
+in order to try the difference in configuring the Ns based on the function of nodes having 7630MB of ram as reported, or if 8000MB is better. 
+
+Then I read through the configuration manual for the HPL.dat file and noted that the technical explaination of the BCASTs value is "try all of them" so I templated some 5 NBs files with 0-5 values for BCASTs and let SLURM handle that part. 
+
+namely, my SBATCH file looks similar to this for six jobs:
+
+```
+cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat mpihpl0.sh 
+#!/bin/bash
+cd $SLURM_SUBMIT_DIR
+cp HPL0.dat HPL.dat
+echo "Master node: $(hostname)\nConfiguration for the results as follows:"
+echo HPL.dat
+
+
+mpirun /clusterfs/common/hpl-2.3/testing/xhpl
+```
+
+each with a different value for BCASTs in the HPL#.dat file to copy over the primary one for the run. 

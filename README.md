@@ -639,3 +639,9 @@ cameron@rp4n0:~$ srun --nodes=2 hostname
 rp4n2
 rp4n1
 ```
+
+
+# Doing something with it?
+
+To follow my llama.cpp journey, there's a separate log for that in LLama.cpp.md
+And to read about how I measured 23.5 Gflops there's Benchmarking.md
