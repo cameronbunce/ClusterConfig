@@ -148,6 +148,7 @@ If like me you've set wireless information in your imager profile, you will now 
 so I can see here that our interface is named simply enough 'eth0' on the Raspberry Pi 4. If you're on more complex hardware it could have a name that looks more like 'enp0s25' but what you're looking for is the 'description: Ethernet interface' part, and the logical name under that. We also see here the MAC - serial- for reservations.  
 
 I took my MACs and made reservations, since DHCP owns my whole network space. I'll show static further down. For my netplan configuration, I edited '/etc/netplan/50-cloud-init.yaml' and added the second entry:
+
 ```
 cameron@rp4n1:~$ sudo nano /etc/netplan/50-cloud-init.yaml
 # This file is generated from information provided by the datasource.  Changes
@@ -270,7 +271,8 @@ Now we somewhere to mount our new partition, I already showed that I have it mou
 ```
 sudo mkdir /clusterfs
 sudo chown cameron:root -R /clusterfs
-sudo chmod 777 -R /clusterfs```
+sudo chmod 777 -R /clusterfs
+```
 
 We need to find our partiton's UUID
 
@@ -283,7 +285,8 @@ $ blkid
 /dev/loop4: TYPE="squashfs"
 /dev/loop2: TYPE="squashfs"
 /dev/loop0: TYPE="squashfs"
-/dev/loop3: TYPE="squashfs"```
+/dev/loop3: TYPE="squashfs"
+```
 
 we'll take that PARTUUID ( yours will be different ) and add it to our file system table, /etc/fstab
 

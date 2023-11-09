@@ -52,7 +52,8 @@ This all amounts to, as the instructions in the fine README say...
 ```
 $ ./configure
 $ make
-$ make install```
+$ make install
+```
 
 I'm just solving for errors along the way. I had to follow that up with a `sudo !!` because I was not root. 
 
@@ -124,7 +125,8 @@ and we now have our `hello` binary which, when run should give the oldest of com
 
 ```
 cameron@rp4n0:~$ ./hello 
-Hello, World!```
+Hello, World!
+```
 
 I got impatient, and found a quick guide to compiling HPL without sweating the optimizations, so lets get a baseline. 
 
@@ -166,7 +168,8 @@ HPL.out     output file name (if any)
 0           L1 in (0=transposed,1=no-transposed) form
 0           U  in (0=transposed,1=no-transposed) form
 1           Equilibration (0=no,1=yes)
-8           memory alignment in double (> 0)```
+8           memory alignment in double (> 0)
+```
 
 
 ```
