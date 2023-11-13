@@ -1,0 +1,183 @@
+Master node: rp4n0
+Configuration for the results as follows:
+HPLinpack benchmark input file
+Innovative Computing Laboratory, University of Tennessee
+HPL.out     output file name (if any)
+6           device out (6=stdout,7=stderr,file)
+1           # of problems sizes (N)
+49920       Ns
+5          # of NBs
+96 184 224 232 248 NBs
+0           PMAP process mapping (0=Row-,1=Column-major)
+1           # of process grids (P x Q)
+3           Ps
+4           Qs
+16.0        threshold
+1           # of panel fact
+2           PFACTs (0=left, 1=Crout, 2=Right)
+1           # of recursive stopping criterium
+4           NBMINs (>= 1)
+1           # of panels in recursion
+2           NDIVs
+1           # of recursive panel fact.
+1           RFACTs (0=left, 1=Crout, 2=Right)
+1           # of broadcast
+1           BCASTs (0=1rg,1=1rM,2=2rg,3=2rM,4=Lng,5=LnM)
+1           # of lookahead depth
+1           DEPTHs (>=0)
+2           SWAP (0=bin-exch,1=long,2=mix)
+64           swapping threshold
+0           L1 in (0=transposed,1=no-transposed) form
+0           U  in (0=transposed,1=no-transposed) form
+1           Equilibration (0=no,1=yes)
+8           memory alignment in double (> 0)
+================================================================================
+HPLinpack 2.3  --  High-Performance Linpack benchmark  --   December 2, 2018
+Written by A. Petitet and R. Clint Whaley,  Innovative Computing Laboratory, UTK
+Modified by Piotr Luszczek, Innovative Computing Laboratory, UTK
+Modified by Julien Langou, University of Colorado Denver
+================================================================================
+
+An explanation of the input/output parameters follows:
+T/V    : Wall time / encoded variant.
+N      : The order of the coefficient matrix A.
+NB     : The partitioning blocking factor.
+P      : The number of process rows.
+Q      : The number of process columns.
+Time   : Time in seconds to solve the linear system.
+Gflops : Rate of execution for solving the linear system.
+
+The following parameter values will be used:
+
+N      :   49920 
+NB     :      96      184      224      232      248 
+PMAP   : Row-major process mapping
+P      :       3 
+Q      :       4 
+PFACT  :   Right 
+NBMIN  :       4 
+NDIV   :       2 
+RFACT  :   Crout 
+BCAST  :  1ringM 
+DEPTH  :       1 
+SWAP   : Mix (threshold = 64)
+L1     : transposed form
+U      : transposed form
+EQUIL  : yes
+ALIGN  : 8 double precision words
+
+--------------------------------------------------------------------------------
+
+- The matrix A is randomly generated for each test.
+- The following scaled residual check will be computed:
+      ||Ax-b||_oo / ( eps * ( || x ||_oo * || A ||_oo + || b ||_oo ) * N )
+- The relative machine precision (eps) is taken to be               1.110223e-16
+- Computational tests pass if scaled residuals are less than                16.0
+
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       49920    96     3     4            2635.22             3.1473e+01
+HPL_pdgesv() start time Sat Nov 11 23:05:23 2023
+
+HPL_pdgesv() end time   Sat Nov 11 23:49:18 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   2.98900715e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       49920   184     3     4            2475.63             3.3502e+01
+HPL_pdgesv() start time Sat Nov 11 23:51:51 2023
+
+HPL_pdgesv() end time   Sun Nov 12 00:33:06 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.22737008e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       49920   224     3     4            2661.01             3.1168e+01
+HPL_pdgesv() start time Sun Nov 12 00:35:40 2023
+
+HPL_pdgesv() end time   Sun Nov 12 01:20:01 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.14309729e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       49920   232     3     4            2691.05             3.0820e+01
+HPL_pdgesv() start time Sun Nov 12 01:22:34 2023
+
+HPL_pdgesv() end time   Sun Nov 12 02:07:25 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   2.85187576e-03 ...... PASSED
+================================================================================
+T/V                N    NB     P     Q               Time                 Gflops
+--------------------------------------------------------------------------------
+WR11C2R4       49920   248     3     4            3207.26             2.5859e+01
+HPL_pdgesv() start time Sun Nov 12 02:09:59 2023
+
+HPL_pdgesv() end time   Sun Nov 12 03:03:26 2023
+
+--------------------------------------------------------------------------------
+||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.19462466e-03 ...... PASSED
+================================================================================
+
+Finished      5 tests with the following results:
+              5 tests completed and passed residual checks,
+              0 tests completed and failed residual checks,
+              0 tests skipped because of illegal input values.
+--------------------------------------------------------------------------------
+
+End of Tests.
+================================================================================
+--------------------------------------------------------------------------
+A system call failed during shared memory initialization that should
+not have.  It is likely that your MPI job will now either abort or
+experience performance degradation.
+
+  Local host:  rp4n1
+  System call: unlink(2) /dev/shm/vader_segment.rp4n1.1000.fb1a0001.3
+  Error:       No such file or directory (errno 2)
+--------------------------------------------------------------------------
+[rp4n0:02616] 3 more processes have sent help message help-opal-shmem-mmap.txt / sys call fail
+[rp4n0:02616] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages
+rp4n0 temperature is 53.0
+rp4n0 temperature is 53.0
+rp4n0 temperature is 52.1
+rp4n0 clock is 1800457088
+rp4n0 clock is 1800457088
+rp4n0 clock is 1800457088
+rp4n0 temperature is 53.0
+rp4n0 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n0 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n1 temperature is 41.8
+rp4n1 temperature is 41.8
+rp4n1 temperature is 41.8
+rp4n1 temperature is 41.8
+rp4n2 temperature is 39.4
+rp4n2 temperature is 39.4
+rp4n2 temperature is 39.4
+rp4n2 temperature is 39.4
+rp4n0 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n0 clock is 1800457088
+rp4n1 clock is 1800457088
+rp4n1 clock is 1800457088
+rp4n1 clock is 1800457088
+rp4n1 clock is 1800404352
+rp4n2 clock is 1800404352
+rp4n2 clock is 1800457088
+rp4n2 clock is 1800457088
+rp4n2 clock is 1800457088
+rp4n1 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n1 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n1 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n0 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n2 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n1 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n2 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n2 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}
+rp4n2 throttled info is {'raw_data': '0x0', 'binary': '00000000000000000000', 'breakdown': {'0': False, '1': False, '2': False, '3': False, '16': False, '17': False, '18': False, '19': False}}

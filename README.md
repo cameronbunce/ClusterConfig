@@ -2,6 +2,8 @@
 
 Relying heavily on the documentation initially written by Garret Mills - https://glmdev.medium.com/building-a-raspberry-pi-cluster-784f0df9afbd- and elaborated on by Jonathon Emerick - https://www.youtube.com/watch?v=l5n62HgSQF8 - I'm updating some of the process to account for new tools and versions. 
 
+This is still a work-in-progress, and more stream-of-consciousness than a final document. It is being revised.
+
 # Hardware
 I begin my quest with the basics, my stash of 3 unobtainium Raspberry Pi 4B 8G units. 
 
@@ -646,5 +648,5 @@ rp4n1
 
 # Doing something with it?
 
-To follow my llama.cpp journey, there's a separate log for that in LLama.cpp.md
-And to read about how I measured 23.5 Gflops there's Benchmarking.md
+To follow my llama.cpp journey, there's a separate log for that in [LLama.cpp.md](https://github.com/cameronbunce/ClusterConfig/blob/main/LLama.cpp.md)
+And to read about how I measured 33.5 Gflops there's [Benchmarking.md](https://github.com/cameronbunce/ClusterConfig/blob/main/Benchmarking.md)

@@ -754,13 +754,26 @@ namely, my SBATCH file looks similar to this for six jobs:
 ```
 cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat mpihpl0.sh 
 #!/bin/bash
+#SBATCH --nodes=3
+#SBATCH --ntasks-per-node=4
+
 cd $SLURM_SUBMIT_DIR
 cp HPL0.dat HPL.dat
-echo "Master node: $(hostname)\nConfiguration for the results as follows:"
-echo HPL.dat
+echo "Master node: $(hostname)"
+echo "Configuration for the results as follows:"
+cat HPL.dat
 
 
 mpirun /clusterfs/common/hpl-2.3/testing/xhpl
 ```
 
 each with a different value for BCASTs in the HPL#.dat file to copy over the primary one for the run. 
+
+I added a thermal monitoring aspect of my benchmarking to pull in the Raspberry Pi specific temperature, clock and throttling information from each node to the Slurm job output as soon as the main job finishes. In the example files I've included here, mpihpl.sh is the base file I was using to try things out and mpihpl1.sh is the job script that returned the highest performance recorded so far, the output of which is slurm-153.out and the configuration used in it is HPL1.dat 
+
+# To Do 
+- Document further comparisons with libraries and compilers:
+-- OpenBLAS vs BLIS
+-- MPI implementations
+-- ARM Performance Libraries
+- Clean up notes, distil raw output to charts that better illustrate the comparisons being made, pack away raw output with labels/notes
