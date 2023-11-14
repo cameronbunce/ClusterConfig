@@ -139,6 +139,7 @@ Using the dat file copy-pasta from the repo above:
 
 <details>
  <summary>HPL.dat</summary>
+    
 ```
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
@@ -172,10 +173,12 @@ HPL.out     output file name (if any)
 1           Equilibration (0=no,1=yes)
 8           memory alignment in double (> 0)
 ```
+
 </details>
 
 <details>
  <summary>Output of running ./testing/xhpl</summary>
+    
 ```
 ./testing/xhpl 
 ================================================================================
@@ -306,6 +309,7 @@ HPL_pdgesv() end time   Fri Sep  8 17:12:46 2023
 ^C
 
 ```
+
 </details>
 
 
@@ -385,6 +389,7 @@ HPL_pdgesv() end time   Fri Sep  8 18:35:26 2023
 --------------------------------------------------------------------------------
 ||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   4.16418112e-03 ...... PASSED
 ```
+
 </details>
 
 That was because even though my `SBATCH` parameters told slurm to tell my MPI interface that there were more cores available I hadn't updated the HPL.dat to reflect running on multiple nodes. Once I had that updated, I got much better results. Using this site for guidance - https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/ - I now ran it again with the following configuration.
@@ -422,8 +427,10 @@ HPL.out     output file name (if any)
 1           Equilibration (0=no,1=yes)
 8           memory alignment in double (> 0)
 ```
+
 <details>
  <summary>Now we're getting somewhere. We have a few problems, but we have more than what we had from a single node. 23 Gflops is laughable, but we're learning parallel programming, not sequencing the human gnome. </summary>
+    
 ```
 cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat slurm-94.out 
 Master node: rp4n0
@@ -593,8 +600,8 @@ HPL_pdgesv() end time   Sat Sep  9 10:37:10 2023
 --------------------------------------------------------------------------------
 ||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   3.14657546e-03 ...... PASSED
 
-
 ```
+
 </details>
 
 recompiling with BLIS just as referenced in https://github.com/jfikar/xhpl-aarch64 :
@@ -616,6 +623,7 @@ gave some improvement before I killed it:
 
 <details>
  <summary>2.5318e+01 Gflops</summary>
+    
 ```
 cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat slurm-95.out 
 Master node: rp4n0
@@ -766,6 +774,7 @@ slurmstepd-rp4n0: error: *** JOB 95 ON rp4n0 CANCELLED AT 2023-09-09T19:14:22 **
 [rp4n0:57763] [[4225,0],0]-[[4225,0],1] mca_oob_tcp_peer_send_handler: unable to send message ON SOCKET 22
 
 ```
+
 </details>
 
 
@@ -795,8 +804,8 @@ I added a thermal monitoring aspect of my benchmarking to pull in the Raspberry 
 
 # To Do 
 - Document further comparisons with libraries and compilers:
--[] OpenBLAS vs BLIS
--[] MPI implementations
--[] ARM Performance Libraries
+- [ ] OpenBLAS vs BLIS
+- [ ] MPI implementations
+- [ ] ARM Performance Libraries
 
--[] Clean up notes, distil raw output to charts that better illustrate the comparisons being made, pack away raw output with labels/notes
+- [ ] Clean up notes, distil raw output to charts that better illustrate the comparisons being made, pack away raw output with labels/notes
