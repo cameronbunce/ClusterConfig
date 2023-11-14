@@ -1,4 +1,4 @@
-## Cluster Performance
+# Cluster Performance
 
 A fantastic way to make sure that we're swimming in the deep end is to run Linpack on our new cluster  [ and for reference, we're using 3 Pi4s with 8 gigs of RAM as compute nodes, and a Pi3 as the controller ]
 
@@ -11,7 +11,7 @@ Netlib.org ( https://www.netlib.org/benchmark/hpl/) has details on how to set up
 BLAS is Basic Linear Algebra Subprograms
 VSIPL is Vector Signal Image Processing Library
 
-# By the book with the big iron?
+## By the book with the big iron?
 
 So let's head on over to the ARM developer site and get their optimized libraries
 
@@ -128,7 +128,7 @@ cameron@rp4n0:~$ ./hello
 Hello, World!
 ```
 
-I got impatient, and found a quick guide to compiling HPL without sweating the optimizations, so lets get a baseline. 
+I got impatient, and found a quick guide to compiling HPL without sweating the optimizations, so lets get a baseline. ( I have not yet returned to this plan )
 
 
 # Or follow some guide for this architecture and tune our way up
@@ -137,6 +137,8 @@ I found a very straightforward guide to running Linpack on the Raspberry Pi - ht
 
 Using the dat file copy-pasta from the repo above:
 
+<details>
+ <summary>HPL.dat</summary>
 ```
 HPLinpack benchmark input file
 Innovative Computing Laboratory, University of Tennessee
@@ -170,8 +172,10 @@ HPL.out     output file name (if any)
 1           Equilibration (0=no,1=yes)
 8           memory alignment in double (> 0)
 ```
+</details>
 
-
+<details>
+ <summary>Output of running ./testing/xhpl</summary>
 ```
 ./testing/xhpl 
 ================================================================================
@@ -302,12 +306,26 @@ HPL_pdgesv() end time   Fri Sep  8 17:12:46 2023
 ^C
 
 ```
-
+</details>
 
 
 
 On all three nodes, it looks a little weird
 
+<details>
+ <summary>When invoked with an `sbatch` job calling `mpirun` the performance went down, a lot.</summary>
+
+```
+#!/bin/bash
+#SBATCH --nodes=3
+#SBATCH --ntasks-per-node=4
+
+cd $SLURM_SUBMIT_DIR
+
+echo "Master node: $(hostname)"
+
+mpirun /clusterfs/common/hpl-2.3/testing/xhpl
+```
 
 ```
 Master node: rp4n0
@@ -367,8 +385,9 @@ HPL_pdgesv() end time   Fri Sep  8 18:35:26 2023
 --------------------------------------------------------------------------------
 ||Ax-b||_oo/(eps*(||A||_oo*||x||_oo+||b||_oo)*N)=   4.16418112e-03 ...... PASSED
 ```
+</details>
 
-That was because I hadn't updated the HPL.dat to reflect running on multiple nodes. Once I had that updated, I got much better results. Using this site for guidance - https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/ - I now ran it again with the following configuration.
+That was because even though my `SBATCH` parameters told slurm to tell my MPI interface that there were more cores available I hadn't updated the HPL.dat to reflect running on multiple nodes. Once I had that updated, I got much better results. Using this site for guidance - https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/ - I now ran it again with the following configuration.
 
 ```
 HPLinpack benchmark input file
@@ -381,8 +400,8 @@ HPL.out     output file name (if any)
 96 104 112 120 128 136 144 152 160 168 176 184 192 200 208 216 224 232 240 248 NBs
 0           PMAP process mapping (0=Row-,1=Column-major)
 1           # of process grids (P x Q)
-3           Ps
-4           Qs
+**3           Ps**
+**4           Qs**
 16.0        threshold
 1           # of panel fact
 2           PFACTs (0=left, 1=Crout, 2=Right)
@@ -403,7 +422,8 @@ HPL.out     output file name (if any)
 1           Equilibration (0=no,1=yes)
 8           memory alignment in double (> 0)
 ```
-
+<details>
+ <summary>Now we're getting somewhere. We have a few problems, but we have more than what we had from a single node. 23 Gflops is laughable, but we're learning parallel programming, not sequencing the human gnome. </summary>
 ```
 cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat slurm-94.out 
 Master node: rp4n0
@@ -575,7 +595,7 @@ HPL_pdgesv() end time   Sat Sep  9 10:37:10 2023
 
 
 ```
-
+</details>
 
 recompiling with BLIS just as referenced in https://github.com/jfikar/xhpl-aarch64 :
 
@@ -594,6 +614,8 @@ make -j$(nproc)
 
 gave some improvement before I killed it:
 
+<details>
+ <summary>2.5318e+01 Gflops</summary>
 ```
 cameron@rp3n0:/clusterfs/common/hpl-2.3$ cat slurm-95.out 
 Master node: rp4n0
@@ -744,8 +766,8 @@ slurmstepd-rp4n0: error: *** JOB 95 ON rp4n0 CANCELLED AT 2023-09-09T19:14:22 **
 [rp4n0:57763] [[4225,0],0]-[[4225,0],1] mca_oob_tcp_peer_send_handler: unable to send message ON SOCKET 22
 
 ```
+</details>
 
-in order to try the difference in configuring the Ns based on the function of nodes having 7630MB of ram as reported, or if 8000MB is better. 
 
 Then I read through the configuration manual for the HPL.dat file and noted that the technical explaination of the BCASTs value is "try all of them" so I templated some 5 NBs files with 0-5 values for BCASTs and let SLURM handle that part. 
 
@@ -773,7 +795,8 @@ I added a thermal monitoring aspect of my benchmarking to pull in the Raspberry 
 
 # To Do 
 - Document further comparisons with libraries and compilers:
--- OpenBLAS vs BLIS
--- MPI implementations
--- ARM Performance Libraries
-- Clean up notes, distil raw output to charts that better illustrate the comparisons being made, pack away raw output with labels/notes
+-[] OpenBLAS vs BLIS
+-[] MPI implementations
+-[] ARM Performance Libraries
+
+-[] Clean up notes, distil raw output to charts that better illustrate the comparisons being made, pack away raw output with labels/notes
