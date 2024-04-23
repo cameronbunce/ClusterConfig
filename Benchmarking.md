@@ -72,7 +72,7 @@ In /usr/local/Modules/init/profile.sh is a script to tell our shell where to fin
 
 That will be invoked on your next session, so exit, and ssh back in to verify that now `module` does something.
 
-Oh, it is possible that "sudo apt install environment-modules" would do the same thing, but that's like taking your car in for an oil change. Know what oil filter you use, apt has an older version than what we just compiled. 
+Oh, it is possible that "sudo apt install environment-modules" would do the same thing, but that's like taking your car in for an oil change. Know what oil filter you use, apt has an older version than what we just compiled. ( yes this is how I convinced myself that it was not time wasted )
 
 Now we tell the module system about our fancy compiler:
 

@@ -21,11 +21,11 @@ cameron@rp4n1:~$ cd /clusterfs/Projects/llama.cpp/
 cameron@rp4n1:/clusterfs/Projects/llama.cpp$ make CC=mpicc CXX=mpicxx LLAMA_MPI=1
 ```
 
-I'm not redistributing these files, just tracking back for reproducibility, the model files I used were from TheBloke
-13b https://huggingface.co/TheBloke/LLaMa-13B-GGML 
-65B - https://huggingface.co/TheBloke/llama-65B-GGML
+I'm not redistributing these files, just tracking back for reproducibility, the model files I used were from TheBloke, the q4_0 version of each
 
-the q4_0 version of each
+- 13b https://huggingface.co/TheBloke/LLaMa-13B-GGML 
+- 65B - https://huggingface.co/TheBloke/llama-65B-GGML
+
 
 # 13B
 
@@ -245,8 +245,9 @@ llama_print_timings:       total time = 75132679.76 ms
 ```
 
 To Do:
-- Move all nodes to 1Gbit network
-- Add Jetson Nano and VIM3 nodes, requires some version mindfulness:
-- - Jetson Nano base OS images are still on 18.04, but https://github.com/Qengineering/Jetson-Nano-Ubuntu-20-image 
-- - VIM3 images are on 20.04
-- - - I could build from source on both, or rebase the Pis to 20.04 and only build the Nano from source, but I'd rather keep it uniform. ( scheduler has to be on the same version, so I can't run the weirdies as a partition unto themselves controlled by the same controller as the others, I tried )
+- [x] Move all nodes to 1Gbit network
+- [ ] Add Jetson Nano and VIM3 nodes, requires some version mindfulness:
+
+- Jetson Nano base OS images are still on 18.04, but https://github.com/Qengineering/Jetson-Nano-Ubuntu-20-image 
+- VIM3 images are on 20.04
+- I could build from source on both, or rebase the Pis to 20.04 and only build the Nano from source, but I'd rather keep it uniform. ( scheduler has to be on the same version, so I can't run the weirdies as a partition unto themselves controlled by the same controller as the others, I tried )
