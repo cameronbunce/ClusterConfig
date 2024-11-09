@@ -2,6 +2,8 @@
 
 I'm not paving any particularly new ground here, just recording my path, standing on the shoulders of giants - thanks to https://github.com/ggerganov and https://github.com/theycallmeloki for paving the way.
 
+Lets make a place to work and pull the llama.cpp repo.
+
 
 ```
 cd /clusterfs
@@ -10,22 +12,40 @@ cd Projects/
 git clone https://github.com/ggerganov/llama.cpp
 ```
 
-Since writing all the README steps, I've enlisted a RPi 3B+ as a scheduler node to free up one of my Pi4s for compute. There's one more entry in the hostfile, one more node in the slurm.conf, but otherwise it's the same. I still have one node on wifi still. 
-
-This is to build the llama.cpp main executable with MPI enabled, dependencies for this are satisfied with the instructions in Part 3 of Garret Mills' instructions (https://glmdev.medium.com/building-a-raspberry-pi-cluster-f5f2446702e8):
+In Part 3 of Garret Mills' instructions (https://glmdev.medium.com/building-a-raspberry-pi-cluster-f5f2446702e8) he provides the installation of our MPI compilation dependencies on all nodes: 
 
 `srun --nodes=3 apt install openmpi-bin openmpi-common libopenmpi3 libopenmpi-dev -y`
+
+That article is a great read on the basics of MPI and even if it isn't doing anything fancy. I followed the whole guide and if you'd like to learn more about parallel programming it's a good way to get your toes wet.
+
+To build llama.cpp with MPI bindings turned on, we do the following:
 
 ```
 cameron@rp4n1:~$ cd /clusterfs/Projects/llama.cpp/
 cameron@rp4n1:/clusterfs/Projects/llama.cpp$ make CC=mpicc CXX=mpicxx LLAMA_MPI=1
 ```
 
-I'm not redistributing these files, just tracking back for reproducibility, the model files I used were from TheBloke, the q4_0 version of each
+Next we need a trained and quantized model.
+I'm not redistributing these files, just tracking back for reproducibility, the model files I used were from TheBloke, ~~the q4_0 version of each. I copied these to local storage ( /home/cameron/models ) on each node to reduce the file transfer load per run.~~
 
-- 13b https://huggingface.co/TheBloke/LLaMa-13B-GGML 
-- 65B - https://huggingface.co/TheBloke/llama-65B-GGML
+~~- 13b https://huggingface.co/TheBloke/LLaMa-13B-GGML ~~
+~~- 65B - https://huggingface.co/TheBloke/llama-65B-GGML~~
 
+llama.cpp has updated the expected format for model binaries, do we are looking for a .gguf file now
+
+- https://huggingface.co/TheBloke/Llama-2-70B-GGUF/blob/main/llama-2-70b.Q3_K_M.gguf
+- https://huggingface.co/TheBloke/Llama-2-13B-GGUF/blob/main/llama-2-13b.Q5_K_M.gguf 
+
+I grabbed these unscientifically. The different Q-value represents a degree of compression or abstraction, if you will, making the model files smaller, but lossy against the less quantized models. I picked a small model file to see how fast we can get tokens, and a big file to see if we can get high-quality responses. I'll eventually grab others to compare different Q-values of the 13b for instance.
+
+Make a hostfile to pass in the MPI host configuration, this diverges from Garret Mills' guide about MPI, but I think this is one way in which llama.cpp implements MPI as a secondary priority. Instead of slurm defining our MPI environment we have to nail it down at invocation with hosts and slots. The hostnames depend on our hostname entries that we configured earlier, otherwise enter an IP or FQDN.
+
+Hostfile: 
+'''
+rp4n0 slots=1
+rp4n1 slots=1
+rp4n2 slots=1
+'''
 
 # 13B
 
@@ -40,8 +60,10 @@ cd $SLURM_SUBMIT_DIR
 
 echo "Master node: $(hostname)"
 
-mpirun -hostfile /clusterfs/Projects/llama.cpp/hostfile -n 3 /clusterfs/Projects/llama.cpp/main -m /home/cameron/models/llama-13b.ggmlv3.q4_0.bin -p "Raspberry Pi computers are " -n 128
+mpirun -hostfile /clusterfs/Projects/llama.cpp/hostfile -n 3 /clusterfs/Projects/llama.cpp/main -m /home/cameron/models/llama-2-13b.Q5_K_M.gguf -p "Raspberry Pi computers are " -n 128
 ```
+<details>
+<summary>2261.08 ms per token,     0.44 tokens per second</summary>
 
 slurm output:
 
@@ -132,6 +154,8 @@ llama_print_timings: prompt eval time = 10146.71 ms /     8 tokens ( 1268.34 ms 
 llama_print_timings:        eval time = 287157.12 ms /   127 runs   ( 2261.08 ms per token,     0.44 tokens per second)
 llama_print_timings:       total time = 297598.22 ms
 ```
+</details>
+
 
 # 65B
 
@@ -150,6 +174,8 @@ echo "Master node: $(hostname)"
 mpirun -hostfile /clusterfs/Projects/llama.cpp/hostfile -n 3 /clusterfs/Projects/llama.cpp/main -m /home/cameron/models/llama-65b.ggmlv3.q4_0.bin -p "Why do we have to sleep?" -n 128
 ```
 
+<details>
+<summary>586930.81 ms per token,     0.00 tokens per second</summary>
 running and output ( 16 Aug 10:20 ):
 
 ```
@@ -243,9 +269,11 @@ llama_print_timings:        eval time = 74540213.30 ms /   127 runs   (586930.81
 llama_print_timings:       total time = 75132679.76 ms
 
 ```
+</details>
 
 To Do:
 - [x] Move all nodes to 1Gbit network
+- [ ] Compare advanced math libraries' performance variation - we don't have any AVX extensions, but we could use BLAS, perhaps to eek out a little more performance
 - [ ] Add Jetson Nano and VIM3 nodes, requires some version mindfulness:
 
 - Jetson Nano base OS images are still on 18.04, but https://github.com/Qengineering/Jetson-Nano-Ubuntu-20-image 
